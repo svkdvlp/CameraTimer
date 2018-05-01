@@ -22,6 +22,7 @@
 
         <!--Lib-->
         <activity android:name="com.svk.cameratimerlib.activity.CameraActivity"
+            android:theme="@style/FullScreenLightTheme"
             android:screenOrientation="portrait"/>
     </application>
 

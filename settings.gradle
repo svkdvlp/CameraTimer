@@ -1,1 +1,1 @@
-include ':app', ':cameratimerlib'
+include ':app', ':cameratimerlib', ':libraryGoogleCam'

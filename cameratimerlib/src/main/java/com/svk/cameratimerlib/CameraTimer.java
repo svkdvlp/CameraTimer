@@ -15,10 +15,10 @@ import java.io.Serializable;
 /**
  * Coded by SvK
  */
-public class CameraTimer implements Serializable{
+public class CameraTimer{
 
     public static final String TAG = "CameraTimer";
-    public static final String KEY_CT = "data_ct";
+    public static final String KEY_TIMELIFE = "data_time";
 
     private Context mContext;
     private int secondsLife;
@@ -51,7 +51,7 @@ public class CameraTimer implements Serializable{
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             Intent camIntent = new Intent(mContext,CameraActivity.class);
-            camIntent.putExtra(KEY_CT,this);
+            camIntent.putExtra(KEY_TIMELIFE,secondsLife);
 
             ((Activity)mContext).startActivityForResult(camIntent, requestCode);
         }else{
