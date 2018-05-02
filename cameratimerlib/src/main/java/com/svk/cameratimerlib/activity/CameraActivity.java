@@ -1,12 +1,9 @@
 package com.svk.cameratimerlib.activity;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.hardware.Camera;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -14,20 +11,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.google.android.cameraview.CameraView;
 import com.svk.cameratimerlib.CameraTimer;
 import com.svk.cameratimerlib.R;
 import com.svk.cameratimerlib.model.ImageModel;
+import com.svk.cameratimerlib.tasks.BitmapConversionListener;
+import com.svk.cameratimerlib.tasks.BitmapConversionTask;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+
 import java.util.ArrayList;
+
+import javax.xml.transform.Result;
 
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "CameraActivity";
+    public static final String KEY_DATA = "data_Arr";
 
     Toolbar tb_head;
     CameraView cv_cam;
@@ -35,10 +37,36 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     Button btn_capture,btn_ok,btn_retake;
     ImageView iv_capview;
 
-    int targetSeconds=0;
-    private Handler mBackgroundHandler;
+    int targetSeconds = 0;
+    int targetCount = 0;
 
-    ArrayList<ImageModel> resultImageList;
+    ProgressDialog mProgressDialog;
+
+    ArrayList<String> resultImageList;
+    Bitmap currentBitmap;
+    String currentBase64Str;
+
+    private BitmapConversionListener bmListener = new BitmapConversionListener() {
+        @Override
+        public void onError() {
+            hideLoading();
+            Toast.makeText(CameraActivity.this, "Some problem found", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onSuccess(Bitmap resultBitmap, String resultBase64str) {
+            hideLoading();
+            Toast.makeText(CameraActivity.this, "On success", Toast.LENGTH_SHORT).show();
+            currentBitmap = resultBitmap;
+            currentBase64Str = resultBase64str;
+            setupImageDisplay(currentBitmap);
+        }
+
+        @Override
+        public void onLoading() {
+            showLoading();
+        }
+    };
 
     private CameraView.Callback mCallback = new CameraView.Callback() {
 
@@ -57,22 +85,9 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             Log.d(TAG, "onPictureTaken " + data.length);
 
             if(data!=null){
-                int maxSize = 816;
-                BitmapFactory.Options opt=new BitmapFactory.Options();
-                opt.inJustDecodeBounds=true;
-                BitmapFactory.decodeByteArray(data, 0, data.length,opt);
-                int srcSize=Math.max(opt.outWidth, opt.outHeight);
-                System.out.println("out w:"+opt.outWidth+" h:"+opt.outHeight);
-                opt.inSampleSize=maxSize <srcSize ? (srcSize/maxSize):1;
-                System.out.println("sample size "+opt.inSampleSize);
-                opt.inJustDecodeBounds=false;
-                Bitmap tmp=BitmapFactory.decodeByteArray(data, 0, data.length,opt);
-
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                tmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-
-                Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
-                setupImageDisplay(decoded);
+                new BitmapConversionTask(data, bmListener).execute();
+            }else{
+                Toast.makeText(CameraActivity.this, "No data on capture", Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -85,6 +100,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         setContentView(R.layout.activity_cam);
 
         targetSeconds = getIntent().getIntExtra(CameraTimer.KEY_TIMELIFE,0);
+        targetCount = getIntent().getIntExtra(CameraTimer.KEY_IMGCOUNT,5);
+        resultImageList = new ArrayList<>();
 
         bindViews();
 
@@ -105,24 +122,38 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     protected void onDestroy() {
+        if (bmListener != null) {
+            bmListener = null;
+        }
         super.onDestroy();
-        if (mBackgroundHandler != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                mBackgroundHandler.getLooper().quitSafely();
-            } else {
-                mBackgroundHandler.getLooper().quit();
-            }
-            mBackgroundHandler = null;
+    }
+
+    private void showLoading() {
+        if (mProgressDialog != null && !mProgressDialog.isShowing()) {
+            mProgressDialog.show();
         }
     }
+
+    private void hideLoading() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.cancel();
+        }
+    }
+
 
     private void init() {
         btn_capture.setOnClickListener(this);
         btn_ok.setOnClickListener(this);
         btn_retake.setOnClickListener(this);
+
         if (cv_cam != null) {
             cv_cam.addCallback(mCallback);
         }
+
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("Loading");
+        mProgressDialog.setCancelable(false);
+
         setupImageCapture();
     }
 
@@ -140,11 +171,29 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(View view) {
         if(view.getId() == R.id.btn_capture){
+            Toast.makeText(this, "On Take Image", Toast.LENGTH_SHORT).show();
             cv_cam.takePicture();
         }else if(view.getId() == R.id.btn_ok){
-            setupImageCapture();
+            actionForCapturedData();
         }else if(view.getId() == R.id.btn_retake){
+            currentBase64Str=null;
+            currentBitmap = null;
             setupImageCapture();
+        }
+    }
+
+    private void actionForCapturedData() {
+        if(resultImageList.size()< targetCount){
+            /*ImageModel item = new ImageModel();
+            item.setImgData(currentBase64Str);*/
+            resultImageList.add(currentBase64Str);
+            setupImageCapture();
+        }else{
+            Toast.makeText(this, "On finish", Toast.LENGTH_SHORT).show();
+            Intent resultIntent = new Intent();
+            resultIntent.putStringArrayListExtra(KEY_DATA,resultImageList);
+            setResult(RESULT_OK,resultIntent);
+            finish();
         }
     }
 
@@ -157,5 +206,11 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         iv_capview.setImageBitmap(bm);
         rl_capuredview.setVisibility(View.VISIBLE);
         rl_capture.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onBackPressed() {
+        setResult(RESULT_CANCELED,null);
+        finish();
     }
 }

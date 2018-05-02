@@ -1,20 +1,14 @@
 package com.svk.cameratimerlib.model;
 
-public class ImageModel {
-    public int id;
+import android.os.Parcelable;
+
+import java.io.Serializable;
+
+public class ImageModel implements Serializable{
+
     public String imgData;
 
-    public ImageModel(int id, String imgData) {
-        this.id = id;
-        this.imgData = imgData;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public ImageModel() {
     }
 
     public String getImgData() {

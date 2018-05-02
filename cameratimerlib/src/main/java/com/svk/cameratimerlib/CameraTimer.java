@@ -19,9 +19,11 @@ public class CameraTimer{
 
     public static final String TAG = "CameraTimer";
     public static final String KEY_TIMELIFE = "data_time";
+    public static final String KEY_IMGCOUNT = "img_count";
 
     private Context mContext;
     private int secondsLife;
+    private int countImages;
     private int requestCode;
 
     private CameraTimer(Context mContext) {
@@ -39,28 +41,30 @@ public class CameraTimer{
         return this;
     }
 
+    public CameraTimer requireImageCount(int count){
+        this.countImages = count;
+        return this;
+    }
+
     public void startCameraActivity(int reqCode){
         this.requestCode =reqCode;
 
         if(mContext==null){
-            throw new NullPointerException("Context must be an activity");
+            throw new IllegalArgumentException("Context must be an activity");
         }else if(secondsLife<=0){
-            throw new RuntimeException("TimeLife must be bigger than zero value");
+            throw new IllegalArgumentException("TimeLife must be bigger than zero value");
+        }else if(countImages<=0){
+            throw new IllegalArgumentException("Image count must be bigger than zero value");
         }
 
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             Intent camIntent = new Intent(mContext,CameraActivity.class);
             camIntent.putExtra(KEY_TIMELIFE,secondsLife);
-
+            camIntent.putExtra(KEY_IMGCOUNT,countImages);
             ((Activity)mContext).startActivityForResult(camIntent, requestCode);
         }else{
             Toast.makeText(mContext, "Camera access permission is required", Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    public int getSecondsLife() {
-        return secondsLife;
     }
 }
