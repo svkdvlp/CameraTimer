@@ -15,11 +15,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 9
         targetSdkVersion 26
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
@@ -31,6 +31,7 @@ android {
     }
     sourceSets {
         main.java.srcDirs += 'src/main/base'
+        main.java.srcDirs += 'src/main/api9'
         main.java.srcDirs += 'src/main/api14'
         main.java.srcDirs += 'src/main/api21'
         main.java.srcDirs += 'src/main/api23'
@@ -38,6 +39,6 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:support-annotations:26.1.0"
-    implementation "com.android.support:support-v4:26.1.0"
+    implementation "com.android.support:support-annotations:25.3.1"
+    implementation "com.android.support:support-v4:25.3.1"
 }

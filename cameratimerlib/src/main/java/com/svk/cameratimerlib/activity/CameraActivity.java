@@ -1,9 +1,12 @@
 package com.svk.cameratimerlib.activity;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -11,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.cameraview.CameraView;
@@ -20,6 +24,10 @@ import com.svk.cameratimerlib.tasks.BitmapConversionListener;
 import com.svk.cameratimerlib.tasks.BitmapConversionTask;
 
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
+import javax.xml.transform.Result;
 
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
@@ -31,16 +39,20 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     CameraView cv_cam;
     RelativeLayout rl_capture,rl_capuredview;
     Button btn_capture,btn_ok,btn_retake;
+    TextView tv_timer,tv_counter;
     ImageView iv_capview;
 
     int targetSeconds = 0;
     int targetCount = 0;
+    long targetMillis,elapsedMillis=0;
 
     ProgressDialog mProgressDialog;
 
     ArrayList<String> resultImageList;
     Bitmap currentBitmap;
     String currentSavedPath;
+
+    CountDownTimer mTimer;
 
     private BitmapConversionListener bmListener = new BitmapConversionListener() {
         @Override
@@ -122,6 +134,10 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         if (bmListener != null) {
             bmListener = null;
         }
+        if(mTimer!=null){
+            mTimer.cancel();
+            mTimer = null;
+        }
         super.onDestroy();
     }
 
@@ -152,17 +168,21 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mProgressDialog.setCancelable(false);
 
         setupImageCapture();
+
+        startTimer(targetSeconds,1000);
     }
 
     private void bindViews() {
-        tb_head = findViewById(R.id.tb_head);
-        rl_capture = findViewById(R.id.rl_capture);
-        rl_capuredview = findViewById(R.id.rl_capuredview);
-        btn_capture = findViewById(R.id.btn_capture);
-        btn_ok = findViewById(R.id.btn_ok);
-        btn_retake = findViewById(R.id.btn_retake);
-        iv_capview = findViewById(R.id.iv_capview);
-        cv_cam = findViewById(R.id.cv_cam);
+        tb_head = (Toolbar) findViewById(R.id.tb_head);
+        rl_capture = (RelativeLayout) findViewById(R.id.rl_capture);
+        rl_capuredview = (RelativeLayout) findViewById(R.id.rl_capuredview);
+        btn_capture = (Button) findViewById(R.id.btn_capture);
+        btn_ok = (Button) findViewById(R.id.btn_ok);
+        btn_retake = (Button) findViewById(R.id.btn_retake);
+        iv_capview = (ImageView) findViewById(R.id.iv_capview);
+        cv_cam = (CameraView) findViewById(R.id.cv_cam);
+        tv_timer = (TextView) findViewById(R.id.tv_timer);
+        tv_counter = (TextView) findViewById(R.id.tv_counter);
     }
 
     @Override
@@ -173,7 +193,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         }else if(view.getId() == R.id.btn_ok){
             actionForCapturedData();
         }else if(view.getId() == R.id.btn_retake){
-            currentSavedPath=null;
+            currentSavedPath = null;
             currentBitmap = null;
             setupImageCapture();
         }
@@ -212,5 +232,37 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     public String getFileName() {
         int imgNameCount = resultImageList.size()+1;
         return "image_"+imgNameCount+".png" ;
+    }
+
+    public void startTimer(final int tsecs, final long tick) {
+
+        targetMillis = tsecs*1000;
+
+        mTimer = new CountDownTimer(targetMillis, tick) {
+
+            public void onTick(long millisUntilFinished) {
+                targetMillis = millisUntilFinished;
+                elapsedMillis = (targetSeconds*1000) - millisUntilFinished;
+
+                if(rl_capture !=null && rl_capture.getVisibility() == View.VISIBLE){
+                    tv_timer.setText(formatTimeString(targetMillis));
+                }
+            }
+
+            public void onFinish() {
+                if(rl_capture !=null && rl_capture.getVisibility() == View.VISIBLE){
+                    tv_timer.setText("0:00");
+                }
+                setResult(Activity.RESULT_CANCELED);
+                finish();
+            }
+        }.start();
+    }
+
+    public String formatTimeString(long ms){
+        return String.format(Locale.getDefault(),
+                "%02d:%02d",
+                TimeUnit.MILLISECONDS.toMinutes(ms) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(ms) % TimeUnit.MINUTES.toSeconds(1));
     }
 }

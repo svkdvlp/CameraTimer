@@ -16,6 +16,9 @@
 
 package com.google.android.cameraview;
 
+import android.content.Context;
+import android.os.Build;
+import android.support.annotation.NonNull;
 import android.view.View;
 
 import java.util.Set;
