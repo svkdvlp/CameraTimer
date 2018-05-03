@@ -16,14 +16,10 @@ import android.widget.Toast;
 import com.google.android.cameraview.CameraView;
 import com.svk.cameratimerlib.CameraTimer;
 import com.svk.cameratimerlib.R;
-import com.svk.cameratimerlib.model.ImageModel;
 import com.svk.cameratimerlib.tasks.BitmapConversionListener;
 import com.svk.cameratimerlib.tasks.BitmapConversionTask;
 
-
 import java.util.ArrayList;
-
-import javax.xml.transform.Result;
 
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
@@ -44,7 +40,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     ArrayList<String> resultImageList;
     Bitmap currentBitmap;
-    String currentBase64Str;
+    String currentSavedPath;
 
     private BitmapConversionListener bmListener = new BitmapConversionListener() {
         @Override
@@ -54,11 +50,11 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         @Override
-        public void onSuccess(Bitmap resultBitmap, String resultBase64str) {
+        public void onSuccess(Bitmap resultBitmap, String savedPath) {
             hideLoading();
-            Toast.makeText(CameraActivity.this, "On success", Toast.LENGTH_SHORT).show();
+            Toast.makeText(CameraActivity.this, "On success" + resultBitmap.getHeight() + " w "+ resultBitmap.getWidth(), Toast.LENGTH_SHORT).show();
             currentBitmap = resultBitmap;
-            currentBase64Str = resultBase64str;
+            currentSavedPath = savedPath;
             setupImageDisplay(currentBitmap);
         }
 
@@ -84,8 +80,9 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         public void onPictureTaken(CameraView cameraView, final byte[] data) {
             Log.d(TAG, "onPictureTaken " + data.length);
 
+
             if(data!=null){
-                new BitmapConversionTask(data, bmListener).execute();
+                new BitmapConversionTask(CameraActivity.this,data,getFileName(), bmListener).execute();
             }else{
                 Toast.makeText(CameraActivity.this, "No data on capture", Toast.LENGTH_SHORT).show();
             }
@@ -176,24 +173,22 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         }else if(view.getId() == R.id.btn_ok){
             actionForCapturedData();
         }else if(view.getId() == R.id.btn_retake){
-            currentBase64Str=null;
+            currentSavedPath=null;
             currentBitmap = null;
             setupImageCapture();
         }
     }
 
     private void actionForCapturedData() {
-        if(resultImageList.size()< targetCount){
-            /*ImageModel item = new ImageModel();
-            item.setImgData(currentBase64Str);*/
-            resultImageList.add(currentBase64Str);
+        if(resultImageList.size() < targetCount){
+            resultImageList.add(currentSavedPath);
+            if(resultImageList.size() == targetCount){
+                Intent resultIntent = new Intent();
+                resultIntent.putStringArrayListExtra(KEY_DATA,resultImageList);
+                setResult(RESULT_OK,resultIntent);
+                finish();
+            }
             setupImageCapture();
-        }else{
-            Toast.makeText(this, "On finish", Toast.LENGTH_SHORT).show();
-            Intent resultIntent = new Intent();
-            resultIntent.putStringArrayListExtra(KEY_DATA,resultImageList);
-            setResult(RESULT_OK,resultIntent);
-            finish();
         }
     }
 
@@ -212,5 +207,10 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     public void onBackPressed() {
         setResult(RESULT_CANCELED,null);
         finish();
+    }
+
+    public String getFileName() {
+        int imgNameCount = resultImageList.size()+1;
+        return "image_"+imgNameCount+".png" ;
     }
 }

@@ -1,5 +1,6 @@
 package com.svk.cameratimerlib.tasks;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,8 @@ import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.svk.cameratimerlib.utils.BitmapUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,23 +23,28 @@ import javax.xml.transform.Result;
 
 public class BitmapConversionTask extends AsyncTask<String, Void, String> {
 
-    Bitmap resultBitmap;
-    String resultBase64str;
-    byte[] data;
-    BitmapConversionListener listener;
+    private Bitmap resultBitmap;
+    private String resultPath;
+    private byte[] data;
+    private String currentImageName;
+    private BitmapConversionListener listener;
+    private Context ctx;
 
-    public BitmapConversionTask(byte[] data , BitmapConversionListener mListener) {
+    public BitmapConversionTask(Context ctx ,byte[] data , String fname,BitmapConversionListener mListener) {
         this.listener = mListener;
+        this.currentImageName=fname;
         this.data = data;
+        this.ctx = ctx;
     }
 
     @Override
     protected String doInBackground(String... params) {
         resultBitmap = getResizedBitmap();
-        resultBase64str = bitmapToBase64(resultBitmap);
+        //resultBitmap = BitmapUtils.getScaledDownBitmap()
+        resultPath = BitmapUtils.saveToInternalStorage(ctx,resultBitmap,currentImageName);
 
 
-        if(resultBitmap != null && resultBase64str != null){
+        if(resultBitmap != null && resultPath != null){
             return "1";
         }else{
             return null;
@@ -46,7 +54,7 @@ public class BitmapConversionTask extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         if(result!=null) {
-            listener.onSuccess(resultBitmap, resultBase64str);
+            listener.onSuccess(resultBitmap, resultPath);
         }else {
             listener.onError();
         }
@@ -74,7 +82,7 @@ public class BitmapConversionTask extends AsyncTask<String, Void, String> {
             tmp.compress(Bitmap.CompressFormat.PNG, 100, out);
 
             Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
-            return decoded;
+            return BitmapUtils.getScaledDownBitmap(decoded,800,false);
         }
         return null;
     }

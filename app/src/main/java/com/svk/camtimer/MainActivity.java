@@ -42,11 +42,11 @@ public class MainActivity extends AppCompatActivity {
 
         if(requestCode == REQ_CODE){
             if(resultCode == Activity.RESULT_OK){
-                /*ArrayList<ImageModel> list = (ArrayList<ImageModel>)data.getSerializableExtra(CameraActivity.KEY_DATA);
+                ArrayList<String> list = (ArrayList<String>)data.getSerializableExtra(CameraActivity.KEY_DATA);
 
                 for (int i = 0; i < list.size() ; i++) {
-                    Log.d(TAG, "onActivityResult : poisition "+ (i+1) + " : "+list.get(i).getImgData());
-                }*/
+                    Log.d(TAG, "onActivityResult : poisition "+ (i+1) + " : "+list.get(i));
+                }
                 Toast.makeText(this, "Ok", Toast.LENGTH_SHORT).show();
 
             }else if(resultCode == Activity.RESULT_CANCELED){

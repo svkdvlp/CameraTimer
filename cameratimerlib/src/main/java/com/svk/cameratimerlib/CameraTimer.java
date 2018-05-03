@@ -12,6 +12,8 @@ import com.svk.cameratimerlib.activity.CameraActivity;
 
 import java.io.Serializable;
 
+import static com.svk.cameratimerlib.utils.BitmapUtils.deleteFilesFromPrivateStorage;
+
 /**
  * Coded by SvK
  */
@@ -30,6 +32,7 @@ public class CameraTimer{
         this.mContext=mContext;
         this.secondsLife=0;
         this.requestCode =-1;
+        deleteFilesFromPrivateStorage(mContext);
     }
 
     public static CameraTimer with(Context ctx){
@@ -47,9 +50,9 @@ public class CameraTimer{
     }
 
     public void startCameraActivity(int reqCode){
-        this.requestCode =reqCode;
+        this.requestCode = reqCode;
 
-        if(mContext==null){
+        if(mContext!=null && !(mContext instanceof Activity)){
             throw new IllegalArgumentException("Context must be an activity");
         }else if(secondsLife<=0){
             throw new IllegalArgumentException("TimeLife must be bigger than zero value");
@@ -59,7 +62,7 @@ public class CameraTimer{
 
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            Intent camIntent = new Intent(mContext,CameraActivity.class);
+            Intent camIntent = new Intent((Activity)mContext,CameraActivity.class);
             camIntent.putExtra(KEY_TIMELIFE,secondsLife);
             camIntent.putExtra(KEY_IMGCOUNT,countImages);
             ((Activity)mContext).startActivityForResult(camIntent, requestCode);

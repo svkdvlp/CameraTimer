@@ -9,7 +9,7 @@ import android.graphics.Bitmap;
 public interface BitmapConversionListener {
     void onError();
 
-    void onSuccess(Bitmap resultBitmap, String resultBase64str);
+    void onSuccess(Bitmap resultBitmap, String savedPath);
 
     void onLoading();
 }
