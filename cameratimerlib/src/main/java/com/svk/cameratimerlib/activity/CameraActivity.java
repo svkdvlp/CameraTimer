@@ -6,10 +6,11 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,8 +27,6 @@ import com.svk.cameratimerlib.tasks.BitmapConversionTask;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-
-import javax.xml.transform.Result;
 
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
@@ -54,6 +53,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     CountDownTimer mTimer;
 
+    private int mCurrentFlash;
+
     private BitmapConversionListener bmListener = new BitmapConversionListener() {
         @Override
         public void onError() {
@@ -64,7 +65,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         public void onSuccess(Bitmap resultBitmap, String savedPath) {
             hideLoading();
-            Toast.makeText(CameraActivity.this, "On success" + resultBitmap.getHeight() + " w "+ resultBitmap.getWidth(), Toast.LENGTH_SHORT).show();
             currentBitmap = resultBitmap;
             currentSavedPath = savedPath;
             setupImageDisplay(currentBitmap);
@@ -115,7 +115,23 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         bindViews();
 
         init();
+
     }
+
+    private static final int[] FLASH_OPTIONS = {
+            CameraView.FLASH_AUTO,
+            CameraView.FLASH_OFF,
+            CameraView.FLASH_ON
+
+    };
+
+
+    private static final int[] FLASH_ICONS = {
+            R.drawable.ic_action_flashauto,
+            R.drawable.ic_action_flashoff,
+            R.drawable.ic_action_flashon
+
+    };
 
     @Override
     protected void onPause() {
@@ -141,6 +157,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         super.onDestroy();
     }
 
+
     private void showLoading() {
         if (mProgressDialog != null && !mProgressDialog.isShowing()) {
             mProgressDialog.show();
@@ -155,6 +172,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
 
     private void init() {
+        setSupportActionBar(tb_head);
+
         btn_capture.setOnClickListener(this);
         btn_ok.setOnClickListener(this);
         btn_retake.setOnClickListener(this);
@@ -186,7 +205,28 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         cv_cam = (CameraView) findViewById(R.id.cv_cam);
         tv_timer = (TextView) findViewById(R.id.tv_timer);
         tv_counter = (TextView) findViewById(R.id.tv_counter);
+
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        menu.findItem(R.id.switch_flash).setIcon(FLASH_ICONS[0]);
+        cv_cam.setFlash(FLASH_OPTIONS[0]);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int i = item.getItemId();
+        if (i == R.id.switch_flash) {
+            flashLightToggle(item);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
 
     @Override
     public void onClick(View view) {
@@ -273,5 +313,16 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     public String formatCounterString(int count){
         String str = String.valueOf(count) + "/" + targetCount;
         return str;
+    }
+
+
+
+    private void flashLightToggle(MenuItem item) {
+
+        if (cv_cam != null) {
+            mCurrentFlash = (mCurrentFlash + 1) % FLASH_OPTIONS.length;
+            item.setIcon(FLASH_ICONS[mCurrentFlash]);
+            cv_cam.setFlash(FLASH_OPTIONS[mCurrentFlash]);
+        }
     }
 }

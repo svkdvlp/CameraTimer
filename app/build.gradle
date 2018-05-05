@@ -16,6 +16,10 @@ android {
         }
     }
     buildToolsVersion '25.0.2'
+
+    lintOptions {
+        checkReleaseBuilds false
+    }
 }
 
 dependencies {
