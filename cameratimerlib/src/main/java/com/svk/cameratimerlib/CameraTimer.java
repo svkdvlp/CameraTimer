@@ -62,7 +62,7 @@ public class CameraTimer{
 
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            Intent camIntent = new Intent((Activity)mContext,CameraActivity.class);
+            Intent camIntent = new Intent(mContext,CameraActivity.class);
             camIntent.putExtra(KEY_TIMELIFE,secondsLife);
             camIntent.putExtra(KEY_IMGCOUNT,countImages);
             ((Activity)mContext).startActivityForResult(camIntent, requestCode);

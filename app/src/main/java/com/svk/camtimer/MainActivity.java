@@ -31,8 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Lib
         CameraTimer.with(this)
-                .timeLife(30)
-                .requireImageCount(2)
+                .timeLife(120)
+                .requireImageCount(5)
                 .startCameraActivity(REQ_CODE);
     }
 

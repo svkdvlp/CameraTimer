@@ -159,6 +159,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         btn_ok.setOnClickListener(this);
         btn_retake.setOnClickListener(this);
 
+
         if (cv_cam != null) {
             cv_cam.addCallback(mCallback);
         }
@@ -166,6 +167,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Loading");
         mProgressDialog.setCancelable(false);
+
+        tv_counter.setText(formatCounterString(resultImageList.size()));
 
         setupImageCapture();
 
@@ -208,6 +211,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 setResult(RESULT_OK,resultIntent);
                 finish();
             }
+            tv_counter.setText(formatCounterString(resultImageList.size()));
             setupImageCapture();
         }
     }
@@ -264,5 +268,10 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 "%02d:%02d",
                 TimeUnit.MILLISECONDS.toMinutes(ms) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.MILLISECONDS.toSeconds(ms) % TimeUnit.MINUTES.toSeconds(1));
+    }
+
+    public String formatCounterString(int count){
+        String str = String.valueOf(count) + "/" + targetCount;
+        return str;
     }
 }
