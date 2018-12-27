@@ -1,5 +1,5 @@
 # CameraTimer
-A Camera Library with timer
+A android Camera Library with timer
 
 ### Usage
 
