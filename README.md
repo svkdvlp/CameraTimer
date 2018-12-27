@@ -16,7 +16,7 @@ A android Camera Library with timer
 CameraTimer.with(this)
                 .timeLife(/*TimeSeconds*/)
                 .requireImageCount(/*Integer Value*/)
-                .startCameraActivity(/*Random Integer*/);
+                .startCameraActivity(REQ_CODE/*any int value*/);
 ```
 Implement onActivityResult
  
